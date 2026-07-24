@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>CineNet</title>
+        <link rel="stylesheet" href="style.css">
+        <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+        <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+        <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    </head>
+    <body>
+        <div id="auth-screen" class="auth-container animate-fade-in">
+            <div class="auth-box">
+                <h1 id="auth-title">Entrar</h1>
+                <p id="auth-error" class="auth-error-msg"></p>
+                <form id="auth-form">
+                    <input
+                        type="email"
+                        id="auth-email"
+                        placeholder="E-mail"
+                        required
+                    >
+                    <input
+                        type="password"
+                        id="auth-password"
+                        placeholder="Palavra-passe"
+                        required
+                    >
+                    <button type="submit" id="auth-submit-btn" class="btn-primary">Entrar</button>
+                </form>
+                <button id="btn-google-auth" class="btn-secondary">Entrar com Google</button>
+                <p class="auth-switch">
+                    <span id="auth-switch-text">Novo por aqui?</span>
+                    <a href="#" id="auth-switch-btn">Registe-se agora.</a>
+                </p>
+            </div>
+        </div>
+        <div id="app-content" style="display: none;">
+            <nav class="navbar">
+                <div class="nav-left">
+                    <h2 class="logo" onclick="irParaHome()">CineNet</h2>
+                    <ul class="nav-menu">
+                        <li>
+                            <a id="nav-home" class="active">Início</a>
+                        </li>
+                        <li>
+                            <a id="nav-movies">Filmes</a>
+                        </li>
+                        <li>
+                            <a id="nav-series">Séries</a>
+                        </li>
+                        <li>
+                            <a id="nav-animes">Animes</a>
+                        </li>
+                        <li>
+                            <a id="nav-doramas">Doramas</a>
+                        </li>
+                        <li>
+                            <a id="nav-search">Busca</a>
+                        </li>
+                        <li>
+                            <a id="nav-watchlist">Lista</a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="nav-right">
+                    <a id="nav-chat" class="btn-bot">🤖 CineBot</a>
+                    <!-- O botão da lupa foi removido daqui -->
+                    <div class="profile-trigger" id="profile-trigger-pc" onclick="abrirModalPerfil()">
+                        <span id="user-name-pc">User</span>
+                        <img id="user-avatar-pc" src="https://upload.wikimedia.org/wikipedia/commons/0/0b/Netflix-avatar.png" alt="Avatar">
+                    </div>
+                </div>
+            </nav>
+            <section id="main-content" class="app-section animate-fade-in">
+                <div id="hero-banner" class="hero">
+                    <div class="hero-overlay"></div>
+                    <div class="hero-content">
+                        <h1 id="hero-title">Carregando...</h1>
+                        <p id="hero-desc"></p>
+                        <div class="hero-buttons">
+                            <button id="hero-play-btn" class="btn-play">▶ Assistir Agora</button>
+                            <button id="hero-info-btn" class="btn-info">ℹ Mais Informações</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="catalog">
+                    <div class="catalog-row">
+                        <h3>Em Destaque Hoje 🔥</h3>
+                        <div class="carousel-container">
+                            <button class="carousel-btn left-btn" onclick="scrollCarousel('row-trending', -1)">&#10094;</button>
+                            <div id="row-trending" class="movie-row"></div>
+                            <button class="carousel-btn right-btn" onclick="scrollCarousel('row-trending', 1)">&#10095;</button>
+                        </div>
+                    </div>
+                    <div class="catalog-row">
+                        <h3>Ação e Aventura 💥</h3>
+                        <div class="carousel-container">
+                            <button class="carousel-btn left-btn" onclick="scrollCarousel('row-acao', -1)">&#10094;</button>
+                            <div id="row-acao" class="movie-row"></div>
+                            <button class="carousel-btn right-btn" onclick="scrollCarousel('row-acao', 1)">&#10095;</button>
+                        </div>
+                    </div>
+                    <div class="catalog-row">
+                        <h3>Ficção Científica 👽</h3>
+                        <div class="carousel-container">
+                            <button class="carousel-btn left-btn" onclick="scrollCarousel('row-ficcao', -1)">&#10094;</button>
+                            <div id="row-ficcao" class="movie-row"></div>
+                            <button class="carousel-btn right-btn" onclick="scrollCarousel('row-ficcao', 1)">&#10095;</button>
+                        </div>
+                    </div>
+                    <div class="catalog-row">
+                        <h3>Terror e Suspense 👻</h3>
+                        <div class="carousel-container">
+                            <button class="carousel-btn left-btn" onclick="scrollCarousel('row-terror', -1)">&#10094;</button>
+                            <div id="row-terror" class="movie-row"></div>
+                            <button class="carousel-btn right-btn" onclick="scrollCarousel('row-terror', 1)">&#10095;</button>
+                        </div>
+                    </div>
+                    <div class="catalog-row">
+                        <h3>Romance ❤️</h3>
+                        <div class="carousel-container">
+                            <button class="carousel-btn left-btn" onclick="scrollCarousel('row-romance', -1)">&#10094;</button>
+                            <div id="row-romance" class="movie-row"></div>
+                            <button class="carousel-btn right-btn" onclick="scrollCarousel('row-romance', 1)">&#10095;</button>
+                        </div>
+                    </div>
+                    <div class="catalog-row">
+                        <h3>Mistério 🕵️‍♂️</h3>
+                        <div class="carousel-container">
+                            <button class="carousel-btn left-btn" onclick="scrollCarousel('row-misterio', -1)">&#10094;</button>
+                            <div id="row-misterio" class="movie-row"></div>
+                            <button class="carousel-btn right-btn" onclick="scrollCarousel('row-misterio', 1)">&#10095;</button>
+                        </div>
+                    </div>
+                    <div class="catalog-row">
+                        <h3>Comédia 😂</h3>
+                        <div class="carousel-container">
+                            <button class="carousel-btn left-btn" onclick="scrollCarousel('row-comedia', -1)">&#10094;</button>
+                            <div id="row-comedia" class="movie-row"></div>
+                            <button class="carousel-btn right-btn" onclick="scrollCarousel('row-comedia', 1)">&#10095;</button>
+                        </div>
+                    </div>
+                    <div class="catalog-row">
+                        <h3>Animação 🎨</h3>
+                        <div class="carousel-container">
+                            <button class="carousel-btn left-btn" onclick="scrollCarousel('row-animacao', -1)">&#10094;</button>
+                            <div id="row-animacao" class="movie-row"></div>
+                            <button class="carousel-btn right-btn" onclick="scrollCarousel('row-animacao', 1)">&#10095;</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            <section id="movies-section" class="app-section animate-fade-in" style="display: none;">
+                <div class="section-container">
+                    <h2 class="section-title" style="margin-bottom: 50px;">Filmes 🎬</h2>
+                    <div class="catalog-row">
+                        <h3>Filmes Populares</h3>
+                        <div class="carousel-container">
+                            <button class="carousel-btn left-btn" onclick="scrollCarousel('row-filmes-populares', -1)">&#10094;</button>
+                            <div id="row-filmes-populares" class="movie-row"></div>
+                            <button class="carousel-btn right-btn" onclick="scrollCarousel('row-filmes-populares', 1)">&#10095;</button>
+                        </div>
+                    </div>
+                    <div class="catalog-row">
+                        <h3>Ação Pura</h3>
+                        <div class="carousel-container">
+                            <button class="carousel-btn left-btn" onclick="scrollCarousel('row-filmes-acao', -1)">&#10094;</button>
+                            <div id="row-filmes-acao" class="movie-row"></div>
+                            <button class="carousel-btn right-btn" onclick="scrollCarousel('row-filmes-acao', 1)">&#10095;</button>
+                        </div>
+                    </div>
+                    <div class="catalog-row">
+                        <h3>Para Rir (Comédia)</h3>
+                        <div class="carousel-container">
+                            <button class="carousel-btn left-btn" onclick="scrollCarousel('row-filmes-comedia', -1)">&#10094;</button>
+                            <div id="row-filmes-comedia" class="movie-row"></div>
+                            <button class="carousel-btn right-btn" onclick="scrollCarousel('row-filmes-comedia', 1)">&#10095;</button>
+                        </div>
+                    </div>
+                    <div class="catalog-row">
+                        <h3>Terror e Assombrações</h3>
+                        <div class="carousel-container">
+                            <button class="carousel-btn left-btn" onclick="scrollCarousel('row-filmes-terror', -1)">&#10094;</button>
+                            <div id="row-filmes-terror" class="movie-row"></div>
+                            <button class="carousel-btn right-btn" onclick="scrollCarousel('row-filmes-terror', 1)">&#10095;</button>
+                        </div>
+                    </div>
+                    <div class="catalog-row">
+                        <h3>Romances Inesquecíveis</h3>
+                        <div class="carousel-container">
+                            <button class="carousel-btn left-btn" onclick="scrollCarousel('row-filmes-romance', -1)">&#10094;</button>
+                            <div id="row-filmes-romance" class="movie-row"></div>
+                            <button class="carousel-btn right-btn" onclick="scrollCarousel('row-filmes-romance', 1)">&#10095;</button>
+                        </div>
+                    </div>
+                    <div class="catalog-row">
+                        <h3>Ficção e Futuro</h3>
+                        <div class="carousel-container">
+                            <button class="carousel-btn left-btn" onclick="scrollCarousel('row-filmes-ficcao', -1)">&#10094;</button>
+                            <div id="row-filmes-ficcao" class="movie-row"></div>
+                            <button class="carousel-btn right-btn" onclick="scrollCarousel('row-filmes-ficcao', 1)">&#10095;</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            <section id="series-section" class="app-section animate-fade-in" style="display: none;">
+                <div class="section-container">
+                    <h2 class="section-title" style="margin-bottom: 50px;">Séries de TV 📺</h2>
+                    <div class="catalog-row">
+                        <h3>Séries Mais Assistidas</h3>
+                        <div class="carousel-container">
+                            <button class="carousel-btn left-btn" onclick="scrollCarousel('row-series-populares', -1)">&#10094;</button>
+                            <div id="row-series-populares" class="movie-row"></div>
+                            <button class="carousel-btn right-btn" onclick="scrollCarousel('row-series-populares', 1)">&#10095;</button>
+                        </div>
+                    </div>
+                    <div class="catalog-row">
+                        <h3>Ação e Aventura</h3>
+                        <div class="carousel-container">
+                            <button class="carousel-btn left-btn" onclick="scrollCarousel('row-series-acao', -1)">&#10094;</button>
+                            <div id="row-series-acao" class="movie-row"></div>
+                            <button class="carousel-btn right-btn" onclick="scrollCarousel('row-series-acao', 1)">&#10095;</button>
+                        </div>
+                    </div>
+                    <div class="catalog-row">
+                        <h3>Dramas Cativantes</h3>
+                        <div class="carousel-container">
+                            <button class="carousel-btn left-btn" onclick="scrollCarousel('row-series-drama', -1)">&#10094;</button>
+                            <div id="row-series-drama" class="movie-row"></div>
+                            <button class="carousel-btn right-btn" onclick="scrollCarousel('row-series-drama', 1)">&#10095;</button>
+                        </div>
+                    </div>
+                    <div class="catalog-row">
+                        <h3>Mistério e Investigação</h3>
+                        <div class="carousel-container">
+                            <button class="carousel-btn left-btn" onclick="scrollCarousel('row-series-misterio', -1)">&#10094;</button>
+                            <div id="row-series-misterio" class="movie-row"></div>
+                            <button class="carousel-btn right-btn" onclick="scrollCarousel('row-series-misterio', 1)">&#10095;</button>
+                        </div>
+                    </div>
+                    <div class="catalog-row">
+                        <h3>Comédias Leves</h3>
+                        <div class="carousel-container">
+                            <button class="carousel-btn left-btn" onclick="scrollCarousel('row-series-comedia', -1)">&#10094;</button>
+                            <div id="row-series-comedia" class="movie-row"></div>
+                            <button class="carousel-btn right-btn" onclick="scrollCarousel('row-series-comedia', 1)">&#10095;</button>
+                        </div>
+                    </div>
+                    <div class="catalog-row">
+                        <h3>Sci-Fi e Fantasia</h3>
+                        <div class="carousel-container">
+                            <button class="carousel-btn left-btn" onclick="scrollCarousel('row-series-ficcao', -1)">&#10094;</button>
+                            <div id="row-series-ficcao" class="movie-row"></div>
+                            <button class="carousel-btn right-btn" onclick="scrollCarousel('row-series-ficcao', 1)">&#10095;</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            <section id="animes-section" class="app-section animate-fade-in" style="display: none;">
+                <div class="section-container">
+                    <h2 class="section-title" style="margin-bottom: 50px;">Animes 🎌</h2>
+                    <div class="catalog-row">
+                        <h3>Animes Mais Populares</h3>
+                        <div class="carousel-container">
+                            <button class="carousel-btn left-btn" onclick="scrollCarousel('row-animes-populares', -1)">&#10094;</button>
+                            <div id="row-animes-populares" class="movie-row"></div>
+                            <button class="carousel-btn right-btn" onclick="scrollCarousel('row-animes-populares', 1)">&#10095;</button>
+                        </div>
+                    </div>
+                    <div class="catalog-row">
+                        <h3>Ação e Lutas Épicas</h3>
+                        <div class="carousel-container">
+                            <button class="carousel-btn left-btn" onclick="scrollCarousel('row-animes-acao', -1)">&#10094;</button>
+                            <div id="row-animes-acao" class="movie-row"></div>
+                            <button class="carousel-btn right-btn" onclick="scrollCarousel('row-animes-acao', 1)">&#10095;</button>
+                        </div>
+                    </div>
+                    <div class="catalog-row">
+                        <h3>Fantasia e Isekai</h3>
+                        <div class="carousel-container">
+                            <button class="carousel-btn left-btn" onclick="scrollCarousel('row-animes-fantasia', -1)">&#10094;</button>
+                            <div id="row-animes-fantasia" class="movie-row"></div>
+                            <button class="carousel-btn right-btn" onclick="scrollCarousel('row-animes-fantasia', 1)">&#10095;</button>
+                        </div>
+                    </div>
+                    <div class="catalog-row">
+                        <h3>Comédias Animadas</h3>
+                        <div class="carousel-container">
+                            <button class="carousel-btn left-btn" onclick="scrollCarousel('row-animes-comedia', -1)">&#10094;</button>
+                            <div id="row-animes-comedia" class="movie-row"></div>
+                            <button class="carousel-btn right-btn" onclick="scrollCarousel('row-animes-comedia', 1)">&#10095;</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            <section id="doramas-section" class="app-section animate-fade-in" style="display: none;">
+                <div class="section-container">
+                    <h2 class="section-title" style="margin-bottom: 50px;">Doramas 🇰🇷</h2>
+                    <div class="catalog-row">
+                        <h3>K-Dramas em Alta</h3>
+                        <div class="carousel-container">
+                            <button class="carousel-btn left-btn" onclick="scrollCarousel('row-doramas-populares', -1)">&#10094;</button>
+                            <div id="row-doramas-populares" class="movie-row"></div>
+                            <button class="carousel-btn right-btn" onclick="scrollCarousel('row-doramas-populares', 1)">&#10095;</button>
+                        </div>
+                    </div>
+                    <div class="catalog-row">
+                        <h3>Romances que Aquecem o Coração</h3>
+                        <div class="carousel-container">
+                            <button class="carousel-btn left-btn" onclick="scrollCarousel('row-doramas-romance', -1)">&#10094;</button>
+                            <div id="row-doramas-romance" class="movie-row"></div>
+                            <button class="carousel-btn right-btn" onclick="scrollCarousel('row-doramas-romance', 1)">&#10095;</button>
+                        </div>
+                    </div>
+                    <div class="catalog-row">
+                        <h3>Comédias Românticas</h3>
+                        <div class="carousel-container">
+                            <button class="carousel-btn left-btn" onclick="scrollCarousel('row-doramas-comedia', -1)">&#10094;</button>
+                            <div id="row-doramas-comedia" class="movie-row"></div>
+                            <button class="carousel-btn right-btn" onclick="scrollCarousel('row-doramas-comedia', 1)">&#10095;</button>
+                        </div>
+                    </div>
+                    <div class="catalog-row">
+                        <h3>Dramas Emocionantes</h3>
+                        <div class="carousel-container">
+                            <button class="carousel-btn left-btn" onclick="scrollCarousel('row-doramas-drama', -1)">&#10094;</button>
+                            <div id="row-doramas-drama" class="movie-row"></div>
+                            <button class="carousel-btn right-btn" onclick="scrollCarousel('row-doramas-drama', 1)">&#10095;</button>
+                        </div>
+                    </div>
+                    <div class="catalog-row">
+                        <h3>Suspense e Mistério</h3>
+                        <div class="carousel-container">
+                            <button class="carousel-btn left-btn" onclick="scrollCarousel('row-doramas-misterio', -1)">&#10094;</button>
+                            <div id="row-doramas-misterio" class="movie-row"></div>
+                            <button class="carousel-btn right-btn" onclick="scrollCarousel('row-doramas-misterio', 1)">&#10095;</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            <section id="search-results-section" class="app-section animate-fade-in" style="display: none;">
+                <div class="section-container">
+                    <div class="search-header-box">
+                        <input
+                            type="text"
+                            id="main-search-input"
+                            class="search-input"
+                            placeholder="Pesquisar por títulos, gêneros ou atores..."
+                        >
+                        <button id="search-clear" class="btn-clear" onclick="limparBusca()">❌ Limpar</button>
+                    </div>
+                    <div class="filter-container">
+                        <button class="filter-pill active" onclick="setSearchFilter('all', this)">Tudo</button>
+                        <button class="filter-pill" onclick="setSearchFilter('movie', this)">Filmes</button>
+                        <button class="filter-pill" onclick="setSearchFilter('tv', this)">Séries</button>
+                    </div>
+                    <div id="search-empty-state" class="empty-state" style="display: none;">
+                        🔍 Nenhum resultado encontrado para a sua pesquisa.
+                    </div>
+                    <div id="search-grid" class="movie-grid"></div>
+                </div>
+            </section>
+            <section id="watchlist-section" class="app-section animate-fade-in" style="display: none;">
+                <div class="section-container">
+                    <h2 class="section-title">A Minha Lista</h2>
+                    <div id="watchlist-empty-state" class="empty-state" style="display: none;">
+                        📌 A sua lista está vazia. Adicione filmes ou séries para assistir mais tarde!
+                    </div>
+                    <div id="watchlist-grid" class="movie-grid"></div>
+                </div>
+            </section>
+            <section id="chat-section" class="app-section animate-fade-in" style="display: none;">
+                <div class="section-container">
+                    <div class="chat-container">
+                        <div class="chat-header">
+                            <h3>CineBot 🤖</h3>
+                            <p>O seu assistente inteligente de recomendação</p>
+                        </div>
+                        <div id="chatbot-messages" class="chat-messages">
+                            <div class="bot-msg">Olá! Sou o CineBot. Posso recomendar-te filmes da nossa base de dados. Pede-me um filme de terror, ação, animes ou uma recomendação surpresa!</div>
+                        </div>
+                        <div id="chat-quick-actions" class="chat-quick-actions">
+                            <span class="chat-chip">Recomenda um filme de ação</span>
+                            <span class="chat-chip">Mostra um anime popular</span>
+                            <span class="chat-chip">Quero ver um filme de terror</span>
+                        </div>
+                        <div class="chat-input-area">
+                            <input type="text" id="chatbot-input" placeholder="Pergunta algo ao CineBot...">
+                            <button id="chatbot-send-btn">Enviar</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            <div id="detailsModal" class="modal">
+                <div class="modal-content details-card animate-scale-up">
+                    <span class="close-modal" onclick="fecharDetalhes()">×</span>
+                    <div id="modal-banner" class="modal-banner"></div>
+                    <div class="modal-body">
+                        <h2 id="modal-title">Título</h2>
+                        <div class="modal-meta">
+                            <span id="modal-year">2024</span>
+                            <span class="dot">•</span>
+                            <span id="modal-age-rating" class="age-rating">L</span>
+                            <span class="dot">•</span>
+                            <span id="modal-duration">--</span>
+                            <span class="dot">•</span>
+                            <span id="modal-rating">⭐ 8.0</span>
+                        </div>
+                        <p class="modal-extra-info">
+                            <strong>Géneros:</strong>
+                            <span id="modal-genres"></span>
+                            <br>
+                            <strong>Elenco:</strong>
+                            <span id="modal-cast"></span>
+                        </p>
+                        <p id="modal-overview">Sinopse...</p>
+                        <div class="modal-actions">
+                            <button id="modal-play-btn" class="btn-play">▶ Assistir Agora</button>
+                            <button id="btn-watchlist" class="btn-secondary" onclick="alternarWatchlist()">+ A Minha Lista</button>
+                        </div>
+                        <div id="modal-episodes-section" class="modal-episodes-section" style="display: none;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                                <h3 style="font-size: 1.4em;">Episódios</h3>
+                                <select id="modal-season-select" class="modal-season-select"></select>
+                            </div>
+                            <div id="modal-episodes-list" class="episode-list"></div>
+                        </div>
+                        <div class="modal-recommendations" style="margin-top: 50px;">
+                            <h3 style="margin-bottom: 20px; font-size: 1.4em;">Títulos Sugeridos</h3>
+                            <div class="carousel-container">
+                                <button class="carousel-btn left-btn" onclick="scrollCarousel('modal-recs-row', -1)">&#10094;</button>
+                                <div id="modal-recs-row" class="movie-row" style="padding-bottom: 10px;"></div>
+                                <button class="carousel-btn right-btn" onclick="scrollCarousel('modal-recs-row', 1)">&#10095;</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="profileModal" class="modal">
+                <div class="modal-content profile-modal-box animate-scale-up">
+                    <span class="close-modal" onclick="fecharModalPerfil()">×</span>
+                    <h2>Editar Perfil</h2>
+                    <div class="form-group">
+                        <label>Nome de Utilizador</label>
+                        <input
+                            type="text"
+                            id="input-profile-name"
+                            class="search-input"
+                            placeholder="Como te queres chamar?"
+                        >
+                    </div>
+                    <div class="form-group">
+                        <label>Escolhe um Avatar Padrão</label>
+                        <div id="default-avatars-grid" class="avatars-grid"></div>
+                    </div>
+                    <div class="form-group">
+                        <label>Ou cola o link de uma imagem da internet</label>
+                        <input
+                            type="text"
+                            id="input-profile-url"
+                            class="search-input"
+                            placeholder="https://exemplo.com/foto.jpg"
+                        >
+                    </div>
+                    <button class="btn-primary" style="margin-top: 15px;" onclick="salvarPerfil()">Guardar Alterações</button>
+                    <button class="btn-secondary" style="margin-top: 10px; color: #ff4d4d; border-color: rgba(255, 77, 77, 0.3);" onclick="logout(); fecharModalPerfil();">Sair da Conta</button>
+                </div>
+            </div>
+            <div id="streaming-player-screen" class="player-fullscreen animate-fade-in" style="display: none;">
+                <button id="close-player-btn" class="close-player">✖ Voltar</button>
+                <iframe id="videoPlayer" allowfullscreen allow="autoplay"></iframe>
+            </div>
+            <!-- NOVO: Submenu que aparece ao clicar em Títulos no Celular -->
+            <div id="mobile-submenu" class="mobile-submenu">
+                <a onclick="irParaFilmes(); toggleSubmenu()">Filmes</a>
+                <a onclick="irParaSeries(); toggleSubmenu()">Séries</a>
+                <a onclick="irParaAnimes(); toggleSubmenu()">Animes</a>
+                <a onclick="irParaDoramas(); toggleSubmenu()">Doramas</a>
+                <a onclick="irParaWatchlist(); toggleSubmenu()">Minha Lista</a>
+            </div>
+            <!-- MODIFICADO: Barra Inferior -->
+            <div class="mobile-bottom-nav">
+                <a id="mob-nav-home" class="active-nav">
+                    🏠
+                    <span>Início</span>
+                </a>
+                <a id="mob-nav-titulos" onclick="toggleSubmenu()">
+                    📚
+                    <span>Títulos</span>
+                </a>
+                <a id="mob-nav-search" onclick="irParaBusca()">
+                    🔍
+                    <span>Buscar</span>
+                </a>
+                <a id="mob-nav-chat">
+                    🤖
+                    <span>CineBot</span>
+                </a>
+            </div>
+        </div>
+        <script src="script.js"></script>
+    </body>
+</html>
