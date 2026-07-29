@@ -125,7 +125,7 @@ function exibirErroAuth(err) {
             mensagem = "⚠️ A senha deve ter pelo menos 6 caracteres.";
             break;
         case 'auth/internal-error':
-            mensagem = "⚠️ Erro interno do servidor. Verifique a sua conexão e tente novamente.";
+            mensagem = "⚠️ E-mail ou senha incorretos. Verifique os seus dados.";
             break;
         default:
             // Caso o erro não esteja mapeado no switch, mostra a mensagem original do Firebase em vez de falhar em silêncio
