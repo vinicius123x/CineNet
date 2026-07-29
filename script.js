@@ -6,7 +6,7 @@ let itemSelecionado = null;
 let debounceTimer; 
 let currentUserUID = null;
 let biblioteca = { watchlist: {}, reviews: {}, perfil: {} };
-let isLoginMode = true;
+let isLoginMode = false; // ALTERADO: Inicia por padrão no modo de Criar Conta (Registar)
 
 const ADMIN_EMAIL = "roberci.azevedo@academico.ifpb.edu.br"; 
 
@@ -31,31 +31,132 @@ window.addEventListener('scroll', () => {
 // ==========================================
 // AUTENTICAÇÃO E SESSÃO
 // ==========================================
-document.getElementById('auth-switch-btn').addEventListener('click', () => {
+
+// Alternar entre Criar Conta e Entrar
+document.getElementById('auth-switch-btn').addEventListener('click', (e) => {
+    e.preventDefault();
     isLoginMode = !isLoginMode;
-    document.getElementById('auth-title').innerText = isLoginMode ? 'Entrar' : 'Registar';
-    document.getElementById('auth-submit-btn').innerText = isLoginMode ? 'Entrar' : 'Registar';
+    ocultarErroAuth();
+    
+    document.getElementById('auth-title').innerText = isLoginMode ? 'Entrar' : 'Criar Conta';
+    document.getElementById('auth-submit-btn').innerText = isLoginMode ? 'Entrar' : 'Criar Conta';
+    document.getElementById('auth-switch-text').innerText = isLoginMode ? 'Novo por aqui?' : 'Já tem uma conta?';
+    document.getElementById('auth-switch-btn').innerText = isLoginMode ? 'Registe-se agora.' : 'Entrar';
 });
 
+// Alternar visibilidade da senha (Ver/Ocultar Senha)
+document.getElementById('btn-toggle-password').addEventListener('click', () => {
+    const pwdInput = document.getElementById('auth-password');
+    const btnToggle = document.getElementById('btn-toggle-password');
+    if (pwdInput.type === 'password') {
+        pwdInput.type = 'text';
+        btnToggle.innerText = '🙈';
+    } else {
+        pwdInput.type = 'password';
+        btnToggle.innerText = '👁️';
+    }
+});
+
+// Submeter formulário (Criar Conta ou Login)
 document.getElementById('auth-form').addEventListener('submit', (e) => {
     e.preventDefault();
-    const email = document.getElementById('auth-email').value;
+    ocultarErroAuth();
+    const email = document.getElementById('auth-email').value.trim();
     const password = document.getElementById('auth-password').value;
-    if (isLoginMode) firebase.auth().signInWithEmailAndPassword(email, password).catch(err => alert(err.message));
-    else firebase.auth().createUserWithEmailAndPassword(email, password).catch(err => alert(err.message));
+
+    if (isLoginMode) {
+        // Modo Login
+        firebase.auth().signInWithEmailAndPassword(email, password)
+            .catch(err => exibirErroAuth(err));
+    } else {
+        // Modo Criar Conta (Entra automaticamente ao concluir)
+        firebase.auth().createUserWithEmailAndPassword(email, password)
+            .catch(err => exibirErroAuth(err));
+    }
 });
 
+// Entrar com Google
 document.getElementById('btn-google-auth').addEventListener('click', () => {
+    ocultarErroAuth();
     const provider = new firebase.auth.GoogleAuthProvider();
-    firebase.auth().signInWithPopup(provider).catch(err => alert(err.message));
+    firebase.auth().signInWithPopup(provider).catch(err => exibirErroAuth(err));
 });
 
+// Entrar como Convidado (Com suporte a Fallback Local)
+document.getElementById('btn-guest-auth').addEventListener('click', () => {
+    ocultarErroAuth();
+    
+    // Tenta entrar via Firebase Anônimo
+    firebase.auth().signInAnonymously().catch(err => {
+        console.warn("Aviso: Login anônimo do Firebase indisponível. Entrando no modo convidado local.", err);
+        // Fallback: entra diretamente sem depender do servidor Firebase
+        iniciarSessaoConvidadoLocal();
+    });
+});
+
+// Função para iniciar sessão de convidado offline/local
+function iniciarSessaoConvidadoLocal() {
+    currentUserUID = "guest_" + Math.random().toString(36).substring(2, 9);
+    document.getElementById('auth-screen').style.display = 'none';
+    document.getElementById('app-content').style.display = 'block';
+    carregarDadosUsuario(true);
+    irParaHome();
+}
+
+// Tratar erros do Firebase e traduzir em avisos claros
+function exibirErroAuth(err) {
+    const errorEl = document.getElementById('auth-error');
+    let mensagem = "Ocorreu um erro ao processar. Tente novamente.";
+
+    // Imprime o erro exato na consola para facilitar a depuração (F12)
+    console.error("Erro capturado pelo Firebase:", err.code, err.message);
+
+    switch(err.code) {
+        case 'auth/user-not-found':
+            mensagem = "⚠️ Esta conta não existe. Verifique o e-mail ou crie uma nova conta.";
+            break;
+        case 'auth/wrong-password':
+            mensagem = "⚠️ Senha incorreta. Verifique os dados e tente novamente.";
+            break;
+        case 'auth/invalid-credential':
+        case 'auth/invalid-login-credentials': // Adicionado para cobrir atualizações de segurança do Firebase
+            mensagem = "⚠️ E-mail ou senha incorretos. Verifique os seus dados.";
+            break;
+        case 'auth/invalid-email':
+            mensagem = "⚠️ Por favor, digite um endereço de e-mail válido.";
+            break;
+        case 'auth/email-already-in-use':
+            mensagem = "⚠️ Este e-mail já está registrado. Escolha a opção 'Entrar'.";
+            break;
+        case 'auth/weak-password':
+            mensagem = "⚠️ A senha deve ter pelo menos 6 caracteres.";
+            break;
+        case 'auth/internal-error':
+            mensagem = "⚠️ Erro interno do servidor. Verifique a sua conexão e tente novamente.";
+            break;
+        default:
+            // Caso o erro não esteja mapeado no switch, mostra a mensagem original do Firebase em vez de falhar em silêncio
+            mensagem = "⚠️ " + (err.message || mensagem);
+    }
+
+    // Exibe o elemento na tela
+    errorEl.innerText = mensagem;
+    errorEl.style.display = 'block';
+}
+
+function ocultarErroAuth() {
+    const errorEl = document.getElementById('auth-error');
+    errorEl.style.display = 'none';
+    errorEl.innerText = '';
+}
+
+// Listener global de autenticação
 firebase.auth().onAuthStateChanged(user => {
     if (user) {
         currentUserUID = user.uid;
         document.getElementById('auth-screen').style.display = 'none';
         document.getElementById('app-content').style.display = 'block';
-        carregarDadosUsuario();
+        carregarDadosUsuario(user.isAnonymous);
         irParaHome();
     } else {
         currentUserUID = null;
@@ -64,9 +165,27 @@ firebase.auth().onAuthStateChanged(user => {
     }
 });
 
-function logout() { firebase.auth().signOut(); }
+function logout() { 
+    if (firebase.auth().currentUser) {
+        firebase.auth().signOut(); 
+    } else {
+        currentUserUID = null;
+        document.getElementById('auth-screen').style.display = 'flex';
+        document.getElementById('app-content').style.display = 'none';
+    }
+}
 
-function carregarDadosUsuario() {
+function carregarDadosUsuario(isAnonymous = false) {
+    if (isAnonymous) {
+        biblioteca = {
+            watchlist: {},
+            reviews: {},
+            perfil: { nome: "Convidado 👤", avatar: avataresSeguros[0] }
+        };
+        atualizarNavBar();
+        return;
+    }
+
     firebase.database().ref('users/' + currentUserUID + '/biblioteca').once('value').then(snapshot => {
         const data = snapshot.val();
         if (data) biblioteca = data;
@@ -78,7 +197,9 @@ function carregarDadosUsuario() {
 }
 
 function salvarDados() {
-    if (currentUserUID) firebase.database().ref('users/' + currentUserUID + '/biblioteca').set(biblioteca);
+    if (currentUserUID && (!firebase.auth().currentUser || !firebase.auth().currentUser.isAnonymous)) {
+        firebase.database().ref('users/' + currentUserUID + '/biblioteca').set(biblioteca);
+    }
 }
 
 // ==========================================
@@ -143,7 +264,6 @@ function salvarPerfil() {
 // NAVEGAÇÃO E SUBMENU MOBILE
 // ==========================================
 
-// Alternar visibilidade do submenu ao tocar em "Títulos"
 function toggleSubmenu() {
     const submenu = document.getElementById('mobile-submenu');
     if(submenu) {
@@ -315,10 +435,9 @@ async function executarBusca(termo) {
 }
 
 // ==========================================
-// MODAL DE DETALHES COMPLETOS COM EPISÓDIOS E FALLBACK EM INGLÊS
+// MODAL DE DETALHES
 // ==========================================
 async function abrirDetalhes(id, tipo, diretoplay = false) {
-    // Busca em PT-BR e, para garantir, busca o título em INGLÊS também (dataEn)
     const [data, credits, recs, ageData, dataEn] = await Promise.all([
         fetchTMDB(`/${tipo}/${id}`),
         fetchTMDB(`/${tipo}/${id}/credits`),
@@ -369,9 +488,6 @@ async function abrirDetalhes(id, tipo, diretoplay = false) {
     
     document.getElementById('modal-overview').innerText = data.overview && data.overview.trim() !== "" ? data.overview : "Sinopse não disponível para este título.";
     document.getElementById('btn-watchlist').innerText = biblioteca.watchlist[id] ? "✔ Na Minha Lista" : "+ A Minha Lista";
-    
-    const userRating = biblioteca.reviews[id] || 0;
-    atualizarEstrelasUI(userRating);
 
     const epSection = document.getElementById('modal-episodes-section');
     if (tipo === 'tv') {
@@ -388,7 +504,6 @@ async function abrirDetalhes(id, tipo, diretoplay = false) {
                 const opt = document.createElement('option');
                 opt.value = s.season_number;
                 
-                // INTELIGÊNCIA: Se em PT o nome for só "Temporada X" mas no Inglês for um arco específico, usa o Inglês.
                 let seasonName = s.name;
                 const enSeason = validSeasonsEn.find(es => es.season_number === s.season_number);
                 
@@ -432,7 +547,6 @@ async function abrirDetalhes(id, tipo, diretoplay = false) {
     }
 }
 
-// CARREGAR EPISÓDIOS COM PLANO B (INGLÊS)
 async function carregarEpisodios(tvId, seasonNumber) {
     const epList = document.getElementById('modal-episodes-list');
     epList.innerHTML = '<p style="color:#888; text-align: center; padding: 20px;">A carregar episódios...</p>';
@@ -440,7 +554,6 @@ async function carregarEpisodios(tvId, seasonNumber) {
     try {
         let seasonData = await fetchTMDB(`/tv/${tvId}/season/${seasonNumber}`);
         
-        // Se a temporada tiver episódios, mas não tiver sinopse ou nome, faz o "Fallback" para Inglês
         if (seasonData.episodes && seasonData.episodes.length > 0) {
             if (!seasonData.episodes[0].overview || seasonData.episodes[0].overview.trim() === "") {
                 const fallbackRes = await fetch(`https://api.themoviedb.org/3/tv/${tvId}/season/${seasonNumber}?api_key=${TMDB_KEY}&language=en-US`);
@@ -494,22 +607,7 @@ function fecharDetalhes() {
     document.body.classList.remove('modal-open');
 }
 
-function votarEstrelas(num) {
-    if (!itemSelecionado) return;
-    biblioteca.reviews[itemSelecionado.id] = num;
-    salvarDados();
-    atualizarEstrelasUI(num);
-}
-
-function atualizarEstrelasUI(num) {
-    const stars = document.querySelectorAll('.star-unit');
-    stars.forEach((star, index) => {
-        if (index < num) star.classList.add('active');
-        else star.classList.remove('active');
-    });
-}
-
-// ABRIR PLAYER (Agora não tem os seletores dentro do ecrã do vídeo)
+// REPRODUTOR DE VÍDEO
 function abrirPlayer(id, tipo, temporada = 1, episodio = 1) {
     fecharDetalhes();
     if (tipo === 'tv') {
@@ -525,7 +623,7 @@ document.getElementById('close-player-btn').addEventListener('click', () => {
     document.getElementById('videoPlayer').src = '';
 });
 
-// Watchlist
+// WATCHLIST
 function alternarWatchlist() {
     const id = itemSelecionado.id;
     if (biblioteca.watchlist[id]) delete biblioteca.watchlist[id];
@@ -552,7 +650,7 @@ function renderizarWatchlist() {
 }
 
 // ==========================================
-// CINEBOT INTELIGENTE
+// CINEBOT
 // ==========================================
 const chatInput = document.getElementById('chatbot-input');
 const sendBtn = document.getElementById('chatbot-send-btn');
