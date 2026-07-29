@@ -75,13 +75,6 @@ document.getElementById('auth-form').addEventListener('submit', (e) => {
     }
 });
 
-// Entrar com Google
-document.getElementById('btn-google-auth').addEventListener('click', () => {
-    ocultarErroAuth();
-    const provider = new firebase.auth.GoogleAuthProvider();
-    firebase.auth().signInWithPopup(provider).catch(err => exibirErroAuth(err));
-});
-
 // Entrar como Convidado (Com suporte a Fallback Local)
 document.getElementById('btn-guest-auth').addEventListener('click', () => {
     ocultarErroAuth();
