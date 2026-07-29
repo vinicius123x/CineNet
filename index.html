@@ -1,11 +1,10 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-PT">
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>CineNet</title>
         <link rel="stylesheet" href="style.css">
-        <link rel="icon" href="logo.png" type="image/png">
         <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
         <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
         <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
@@ -13,7 +12,7 @@
     <body>
         <div id="auth-screen" class="auth-container animate-fade-in">
             <div class="auth-box">
-                <h1 id="auth-title">Entrar</h1>
+                <h1 id="auth-title">Criar Conta</h1>
                 <p id="auth-error" class="auth-error-msg"></p>
                 <form id="auth-form">
                     <input
@@ -22,25 +21,34 @@
                         placeholder="E-mail"
                         required
                     >
-                    <input
-                        type="password"
-                        id="auth-password"
-                        placeholder="Palavra-passe"
-                        required
-                    >
-                    <button type="submit" id="auth-submit-btn" class="btn-primary">Entrar</button>
+                    <div class="password-input-wrapper">
+                        <input
+                            type="password"
+                            id="auth-password"
+                            placeholder="Palavra-passe"
+                            required
+                        >
+                        <button type="button" id="btn-toggle-password" class="btn-toggle-pwd" title="Mostrar/Ocultar Senha">👁️</button>
+                    </div>
+                    <button type="submit" id="auth-submit-btn" class="btn-primary">Criar Conta</button>
                 </form>
                 <button id="btn-google-auth" class="btn-secondary">Entrar com Google</button>
                 <p class="auth-switch">
-                    <span id="auth-switch-text">Novo por aqui?</span>
-                    <a href="#" id="auth-switch-btn">Registe-se agora.</a>
+                    <span id="auth-switch-text">Já tem uma conta?</span>
+                    <a href="#" id="auth-switch-btn">Entrar</a>
                 </p>
+
+                <div class="auth-divider">
+                    <span>ou</span>
+                </div>
+
+                <button id="btn-guest-auth" class="btn-guest">Entrar como Convidado 👤</button>
             </div>
         </div>
         <div id="app-content" style="display: none;">
             <nav class="navbar">
                 <div class="nav-left">
-                    <h2 class="logo" onclick="irParaHome()">CineNet</h2>
+                    <h2 class="logo" onclick="irParaHome()">Cine<span class="logo-net">Net</span></h2>
                     <ul class="nav-menu">
                         <li>
                             <a id="nav-home" class="active">Início</a>
@@ -67,7 +75,6 @@
                 </div>
                 <div class="nav-right">
                     <a id="nav-chat" class="btn-bot">🤖 CineBot</a>
-                    <!-- O botão da lupa foi removido daqui -->
                     <div class="profile-trigger" id="profile-trigger-pc" onclick="abrirModalPerfil()">
                         <span id="user-name-pc">User</span>
                         <img id="user-avatar-pc" src="https://upload.wikimedia.org/wikipedia/commons/0/0b/Netflix-avatar.png" alt="Avatar">
@@ -473,7 +480,6 @@
                 <button id="close-player-btn" class="close-player">✖ Voltar</button>
                 <iframe id="videoPlayer" allowfullscreen allow="autoplay"></iframe>
             </div>
-            <!-- NOVO: Submenu que aparece ao clicar em Títulos no Celular -->
             <div id="mobile-submenu" class="mobile-submenu">
                 <a onclick="irParaFilmes(); toggleSubmenu()">Filmes</a>
                 <a onclick="irParaSeries(); toggleSubmenu()">Séries</a>
@@ -481,7 +487,6 @@
                 <a onclick="irParaDoramas(); toggleSubmenu()">Doramas</a>
                 <a onclick="irParaWatchlist(); toggleSubmenu()">Minha Lista</a>
             </div>
-            <!-- MODIFICADO: Barra Inferior -->
             <div class="mobile-bottom-nav">
                 <a id="mob-nav-home" class="active-nav">
                     🏠
